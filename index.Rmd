@@ -1,7 +1,6 @@
 ---
 title: "Tree Population and Median Income in NYC"
 author: Mia Giannini
-subtitle: Subtitle here if desired
 output: html_document
 ---
 
@@ -13,7 +12,7 @@ This project aims to identify a sort of correlation between median income and tr
 
 The data for this project is sourced from NYC Open Data. It specifically uses the data set entitled '2015 Street Tree Census - Tree Data'. This data set was collected by a combination of volunteers and Parks and Recreation staff members resulting in a list of over 680,000 trees as well as over 40 variables pertaining to each tree's location, health, and overall status. The other data for this project is pulled from the American Community Survey from 2015 using the tidycensus package. I used the tidycensus package to acquire the median income data from 2015 for the counties relative to each borough. I used ggplot to plot the tree population in each borough colored by the median income. I also wanted to show the results of this in map form, by plotting each of the living trees from the dataset onto a map of New York City, colored by the median income of the relative borough. 
 
-# Start by loading packages
+## Start by loading packages
 ```{r packages , message=F, warning=F }
 library(tidyverse)
 library(tidycensus)
@@ -30,13 +29,13 @@ library(mapdata)
 knitr::opts_chunk$set(cache=TRUE)  # cache the results for quick compiling
 ```
 
-# Census API key
-```{r api_key}
+## Census API key
+```{r api_key, message = FALSE, warning = FALSE}
 census_api_key(Sys.getenv("CENSUS_API_KEY"), install = TRUE, overwrite = TRUE)
 # readRenviron("~/.Renviron")
 ```
 
-# Read in NYC 2015 Street Tree Census and ACS Census Data
+## Read in NYC 2015 Street Tree Census and ACS Census Data
 ```{r data , message = F}
 variable <- load_variables(2015, "acs5", cache = TRUE)
 nymedinc <- get_acs(geography = "county", state = "NY", county = c("Bronx", "Kings", "New York", "Queens", "Richmond"), 
@@ -49,19 +48,19 @@ tree_census <- read_csv(tree_census_file) %>%
   slice(1:1000)
 ```
 
-# Add borough column to nymedinc
+## Add borough column to nymedinc
 ```{r nymedinc}
 nymedinc$"borough" <- c("Bronx", "Brooklyn", "Manhattan", "Queens", "Staten Island")
 ```
 
-# Filter tree_census for living trees, join with nymedinc and rename 'tree_data'
+## Filter tree_census for living trees, join with nymedinc and rename 'tree_data'
 ```{r filtering_tree_census}
 tree_data <- tree_census %>%
   filter(status == "Alive") %>%
   left_join(nymedinc, by=c("borough"="borough"))
 ```
 
-# Summarize the number of trees in each borough
+## Summarize the number of trees in each borough
 ```{r count_borough}
 borough_count <- tree_data%>%
   group_by(borough)%>%
@@ -69,7 +68,7 @@ borough_count <- tree_data%>%
 
 ```
 
-# Join borough_count to tree_data, rename tree_pop_data
+## Join borough_count to tree_data, rename tree_pop_data
 ```{r join}
 tree_pop_data <- tree_data %>%
   left_join(borough_count, by=c("borough" = "borough"))
