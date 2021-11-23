@@ -2,104 +2,114 @@
 title: "Tree Population and Median Income in NYC"
 author: Mia Giannini
 subtitle: Subtitle here if desired
+output: html_document
 ---
 
 # Introduction
 
-[~ 200 words]
-
-Clearly stated background and questions / hypotheses / problems being addressed. Sets up the analysis in an interesting and compelling way.
+This project aims to identify a sort of correlation between median income and tree population among the boroughs of New York City. Lower income communities tend to be more vulnerable to environmental degradation. New York City is one of the big cities facing the urban heat island effect, which is when a metropolitan area experiences a higher climate than surrounding areas due to the excessive population and usage of transportation vehicles. Tree cover is positively correlated with cleaner air, public health, and a more regulated climate. Communities with higher tree coverage are more immune to the effects of climate change, leaving lower income communities to face the full effects. I will be looking at the relationship between the median income of the counties that represent the boroughs of New York and the 2015 NYC Street Tree Census, which gives me the number of street trees per borough. 
 
 # Materials and methods
 
-[~ 200 words]
+The data for this project is sourced from NYC Open Data. It specifically uses the data set entitled '2015 Street Tree Census - Tree Data'. This data set was collected by a combination of volunteers and Parks and Recreation staff members resulting in a list of over 680,000 trees as well as over 40 variables pertaining to each tree's location, health, and overall status. The other data for this project is pulled from the American Community Survey from 2015 using the tidycensus package. I used the tidycensus package to acquire the median income data from 2015 for the counties relative to each borough. I used ggplot to plot the tree population in each borough colored by the median income. I also wanted to show the results of this in map form, by plotting each of the living trees from the dataset onto a map of New York City, colored by the median income of the relative borough. 
 
-Narrative: Clear narrative description of the data sources and methods. Includes data from at least two sources that were integrated / merged in R.
-
-Code: The code associated with the project is well organized and easy to follow. Demonstrates mastery of R graphics and functions.
-
-Data: The underlying data are publicly accessible via the web and downloaded/accessed within the Rmd script. If you want to use your own data, you must make it available on a website (e.g. Figshare) so that others are able to re-run your code.
-
-You can do bullets like this:
-
-* The first most important thing
-* The second most important thing
-* The third most important thing
-
-You can do numbers like this:
-
-1. The first most important thing
-2. The second most important thing
-3. The third most important thing
-
-See [http://rmarkdown.rstudio.com/](http://rmarkdown.rstudio.com/) for all the amazing things you can do.
-
-
-Here's my first code chunk.
-```{r}
-1+2
-```
-
-Load any required packages in a code chunk (you may need to install some packages):
-
-```{r, message=F, warning=F}
+# Start by loading packages
+```{r packages , message=F, warning=F }
 library(tidyverse)
-library(leaflet)
-library(kableExtra)
+library(tidycensus)
+library(readr)
+library(dplyr)
+library(viridis)
+library(ggplot2)
+library(mapview)
+library(sf)
+library(spData)
+library(ggmap)
+library(maps)
+library(mapdata)
 knitr::opts_chunk$set(cache=TRUE)  # cache the results for quick compiling
 ```
 
-## Download and clean all required data
-```{r}
-n=20
-data=data.frame(x=runif(n,-180,180),
-                y=runif(n,-60,60),
-                size = runif(n, 5, 20),
-                category = factor(
-                  sample(letters[1:5], n, replace = TRUE)
-                  ),
-                value = rnorm(n))
+# Census API key
+```{r api_key}
+census_api_key(Sys.getenv("CENSUS_API_KEY"), install = TRUE, overwrite = TRUE)
+# readRenviron("~/.Renviron")
 ```
 
-```{r, results='asis'}
-data %>% 
-  slice(1:10) %>% #show only 1:n rows
-  kable(digits=2,align="c")%>% #make table and round to two digits
-  kable_styling(bootstrap_options = 
-                  c("striped", "hover", "condensed", "responsive")) #apply other formatting
+# Read in NYC 2015 Street Tree Census and ACS Census Data
+```{r data , message = F}
+variable <- load_variables(2015, "acs5", cache = TRUE)
+nymedinc <- get_acs(geography = "county", state = "NY", county = c("Bronx", "Kings", "New York", "Queens", "Richmond"), 
+                    variables = c(medianincome = "B06011_001"), year = 2015)
+
+tree_census_file <- "data/2015_Street_Tree_Census_-_Tree_Data.csv"
+if (!file.exists (tree_census_file))
+  download.file('https://data.cityofnewyork.us/api/views/uvpi-gqnh/rows.csv?accessType=DOWNLOAD',destfile = tree_census_file)
+tree_census <- read_csv(tree_census_file) %>%
+  slice(1:1000)
 ```
 
-Add any additional processing steps here.
+# Add borough column to nymedinc
+```{r nymedinc}
+nymedinc$"borough" <- c("Bronx", "Brooklyn", "Manhattan", "Queens", "Staten Island")
+```
+
+# Filter tree_census for living trees, join with nymedinc and rename 'tree_data'
+```{r filtering_tree_census}
+tree_data <- tree_census %>%
+  filter(status == "Alive") %>%
+  left_join(nymedinc, by=c("borough"="borough"))
+```
+
+# Summarize the number of trees in each borough
+```{r count_borough}
+borough_count <- tree_data%>%
+  group_by(borough)%>%
+  summarise(count=n())
+
+```
+
+# Join borough_count to tree_data, rename tree_pop_data
+```{r join}
+tree_pop_data <- tree_data %>%
+  left_join(borough_count, by=c("borough" = "borough"))
+```
+
 
 # Results
 
 [~200 words]
 
-Tables and figures (maps and other graphics) are carefully planned to convey the results of your analysis. Intense exploration and evidence of many trials and failures. The author looked at the data in many different ways before coming to the final presentation of the data.
+Looking at the first graph overall, we can see that Manhattan, the borough with the highest median income actually has the lowest tree population. Staten Island similarly has a higher median income and a tree population on the lower end of things. When we look at the graph as a whole, we can see the the Bronx, Brooklyn, and Queens followed the pattern we expected where the lower income borough has a lower population of trees. 
 
-Show tables, plots, etc. and describe them.
+## Bar Plot of Tree Population and Median Income
+```{r, fig.width=6, fig.height=3, fig.cap="Bar chart of tree population and income data"}
+tree_plot <- ggplot(tree_pop_data, aes(x = borough , y= count, fill = estimate))+
+  geom_bar(stat = "identity")+
+  scale_fill_gradientn(colors = viridis(256, option = "viridis"))+
+  labs(x = "Borough", y = "Tree Population", fill = "Median Income", title = "Tree Population and Median Income in NYC Boroughs")
 
-```{r, fig.width=6, fig.height=3, fig.cap="Map of completely random data"}
-m <- leaflet(data) %>% 
-  addTiles() %>% 
-  addCircleMarkers(~x, ~y, radius = ~size,color = ~as.factor(category)) %>% 
-  addPopups(~x[2], ~y[2], "Random popup")
-m  # a map with the default OSM tile layer
+tree_plot
 ```
 
+We see this same data portrayed on the map, allowing us to see and roughly compare the average sizes of each county. We can see that Manhattan has the smallest area compared to the other boroughs, which may have a role in determining the tree population, regardless of median income. 
 
-```{r}
-data %>% 
-  ggplot(aes(x=x,y=y,col=category))+
-  geom_point()
+## Map of trees, colored by borough
+```{r, fig.width = 6, fig.height = 3, fig.cap="Map of tree data", as.is = TRUE}
+# mapview(tree_pop_data, xcol = "longitude", ycol = "latitude", crs = 4269, grid = FALSE, legend = TRUE, cex = 4, zcol = 'borough')
 ```
 
 # Conclusions
 
-[~200 words]
-
-Clear summary adequately describing the results and putting them in context. Discussion of further questions and ways to continue investigation.
+After looking at these results, we are unable to make the statement that median income is directly correlated with tree population in the boroughs of NYC. One of the reasons we are unable to come to a conclusion is the fact that many other factors were not included in this analysis. While median income could potentially have an effect on tree population, the area of the borough in question and the population and building density are all factors that would heavily influence the outcome. If we were expecting results that support the idea that median income influences tree population, Manhattan, the wealthiest borough, would have had the highest tree population. However, Manhattan is an incredibly populated urban area, so it would make sense that the tree population here is not comparable to that of Queens or Brooklyn. A potential future analysis could take the area of each borough into consideration and plot the trees per square mile against the median income to assess the impact of median income more accurately. 
 
 # References
 
-All sources are cited in a consistent manner
+2015 Street Tree Census - Tree Data | NYC Open Data. (n.d.). . https://data.cityofnewyork.us/Environment/2015-Street-Tree-Census-Tree-Data/uvpi-gqnh.
+
+Census - Table Results. (n.d.). . https://data.census.gov/cedsci/table?tid=ACSDP5Y2015.DP03&g=0400000US36.
+
+Leahy, I., and Y. Serkez. 2021, June 30. Opinion | Since When Have Trees Existed Only for Rich Americans? The New York Times.
+
+Schwarz, K., M. Fragkias, C. G. Boone, W. Zhou, M. McHale, J. M. Grove, J. O’Neil-Dunne, J. P. McFadden, G. L. Buckley, D. Childers, L. Ogden, S. Pincetl, D. Pataki, A. Whitmer, and M. L. Cadenasso. 2015. Trees Grow on Money: Urban Tree Canopy Cover and Environmental Justice. PLOS ONE 10:e0122051.
+
