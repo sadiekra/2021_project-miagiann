@@ -45,8 +45,7 @@ nymedinc <- get_acs(geography = "county", state = "NY", county = c("Bronx", "Kin
 tree_census_file <- "data/2015_Street_Tree_Census_-_Tree_Data.csv"
 if (!file.exists (tree_census_file))
   download.file('https://data.cityofnewyork.us/api/views/uvpi-gqnh/rows.csv?accessType=DOWNLOAD',destfile = tree_census_file)
-tree_census <- read_csv(tree_census_file) %>%
-  slice(1:1000)
+tree_census <- read_csv(tree_census_file)
 ```
 
 ## Add borough column to nymedinc
@@ -95,10 +94,11 @@ tree_plot
 We see this same data portrayed on the map, allowing us to see and roughly compare the average sizes of each county. We can see that Manhattan has the smallest area compared to the other boroughs, which may have a role in determining the tree population, regardless of median income. 
 
 ## Map of trees, colored by borough
-```{r, fig.width = 6, fig.height = 3, fig.cap="Map of tree data", as.is = TRUE}
+```{r, fig.width = 6, fig.height = 3, fig.cap="Map of tree data"}
 map <- leaflet() %>%
   addTiles(group = "CartoDB")%>%
   addCircleMarkers(data = tree_pop_data, lng = tree_pop_data$longitude, lat = tree_pop_data$latitude, radius = 0.0001)
+map
 ```
 
 # Conclusions
