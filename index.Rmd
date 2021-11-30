@@ -26,6 +26,7 @@ library(spData)
 library(ggmap)
 library(maps)
 library(mapdata)
+library(leaflet)
 knitr::opts_chunk$set(cache=TRUE)  # cache the results for quick compiling
 ```
 
@@ -95,7 +96,9 @@ We see this same data portrayed on the map, allowing us to see and roughly compa
 
 ## Map of trees, colored by borough
 ```{r, fig.width = 6, fig.height = 3, fig.cap="Map of tree data", as.is = TRUE}
-# mapview(tree_pop_data, xcol = "longitude", ycol = "latitude", crs = 4269, grid = FALSE, legend = TRUE, cex = 4, zcol = 'borough')
+map <- leaflet() %>%
+  addTiles(group = "CartoDB")%>%
+  addCircleMarkers(data = tree_pop_data, lng = tree_pop_data$longitude, lat = tree_pop_data$latitude, radius = 0.0001)
 ```
 
 # Conclusions
