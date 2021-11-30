@@ -32,7 +32,7 @@ knitr::opts_chunk$set(cache=TRUE)  # cache the results for quick compiling
 ## Census API key
 ```{r api_key, message = FALSE, warning = FALSE}
 census_api_key(Sys.getenv("CENSUS_API_KEY"), install = TRUE, overwrite = TRUE)
-# readRenviron("~/.Renviron")
+readRenviron("~/.Renviron")
 ```
 
 ## Read in NYC 2015 Street Tree Census and ACS Census Data
