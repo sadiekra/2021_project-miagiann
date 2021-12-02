@@ -16,6 +16,8 @@ jobs:
       - name: Render Site
         env:
           ACTIONS_ALLOW_UNSECURE_COMMANDS: true
+        with:
+          CENSUS_API_KEY: ${{ secrets.CENSUS_API_KEY }}
         run: |-
           Rscript -e "rmarkdown::render_site(encoding = 'UTF-8')"
       - name: Deploy to GitHub Pages
