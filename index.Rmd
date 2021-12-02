@@ -45,7 +45,8 @@ nymedinc <- get_acs(geography = "county", state = "NY", county = c("Bronx", "Kin
 tree_census_file <- "data/2015_Street_Tree_Census_-_Tree_Data.csv"
 if (!file.exists (tree_census_file))
   download.file('https://data.cityofnewyork.us/api/views/uvpi-gqnh/rows.csv?accessType=DOWNLOAD',destfile = tree_census_file)
-tree_census <- read_csv(tree_census_file)
+tree_census <- read_csv(tree_census_file) %>%
+  slice(1:1000)
 ```
 
 ## Add borough column to nymedinc
