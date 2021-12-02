@@ -4,11 +4,11 @@ author: Mia Giannini
 output: html_document
 ---
 
-# Introduction
+# Introduction 
 
 This project aims to identify a sort of correlation between median income and tree population among the boroughs of New York City. Lower income communities tend to be more vulnerable to environmental degradation. New York City is one of the big cities facing the urban heat island effect, which is when a metropolitan area experiences a higher climate than surrounding areas due to the excessive population and usage of transportation vehicles. Tree cover is positively correlated with cleaner air, public health, and a more regulated climate. Communities with higher tree coverage are more immune to the effects of climate change, leaving lower income communities to face the full effects. I will be looking at the relationship between the median income of the counties that represent the boroughs of New York and the 2015 NYC Street Tree Census, which gives me the number of street trees per borough. 
 
-# Materials and methods
+# Materials and methods 
 
 The data for this project is sourced from NYC Open Data. It specifically uses the data set entitled '2015 Street Tree Census - Tree Data'. This data set was collected by a combination of volunteers and Parks and Recreation staff members resulting in a list of over 680,000 trees as well as over 40 variables pertaining to each tree's location, health, and overall status. The other data for this project is pulled from the American Community Survey from 2015 using the tidycensus package. I used the tidycensus package to acquire the median income data from 2015 for the counties relative to each borough. I used ggplot to plot the tree population in each borough colored by the median income. I also wanted to show the results of this in map form, by plotting each of the living trees from the dataset onto a map of New York City, colored by the median income of the relative borough. 
 
