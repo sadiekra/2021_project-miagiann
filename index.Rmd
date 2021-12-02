@@ -95,9 +95,11 @@ We see this same data portrayed on the map, allowing us to see and roughly compa
 
 ## Map of trees, colored by borough
 ```{r, fig.width = 6, fig.height = 3, fig.cap="Map of tree data"}
+factpal <- colorFactor(topo.colors(5), tree_pop_data$estimate)
+
 map <- leaflet() %>%
   addTiles(group = "CartoDB")%>%
-  addCircleMarkers(data = tree_pop_data, lng = tree_pop_data$longitude, lat = tree_pop_data$latitude, radius = 0.0001)
+  addCircleMarkers(data = tree_pop_data, lng = tree_pop_data$longitude, lat = tree_pop_data$latitude, radius = 0.0001, color = ~factpal(estimate))
 map
 ```
 
